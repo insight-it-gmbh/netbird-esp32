@@ -1,0 +1,27 @@
+name: Upload to ESP Component Registry
+
+# Publishes components/netbird_lite as insight-it-gmbh/netbird_lite.
+# Runs when a GitHub release is published, or manually. The version comes from
+# components/netbird_lite/idf_component.yml; a version that is already in the
+# registry is skipped (registry versions are immutable).
+# Authentication: GitHub OIDC (trusted uploader configured in the registry), no secret.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload netbird_lite
+        uses: espressif/upload-components-ci-action@v2
+        with:
+          components: "netbird_lite:components/netbird_lite"
+          namespace: "insight-it-gmbh"

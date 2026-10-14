@@ -1,0 +1,16 @@
+netbird-lite
+Copyright 2026 Insight-IT GmbH, Berlin, Germany (https://www.insight-it.de)
+
+This product includes netbird-lite, developed by Insight-IT GmbH:
+https://github.com/insight-it-gmbh/netbird-esp32
+
+netbird-lite contains third-party code:
+- wireguard-lwip, Copyright (c) 2021 Daniel Hope (www.floorsense.nz), BSD-3-Clause
+- X25519 from STROBE, Copyright (c) 2015-2016 Cryptography Research, Inc., MIT
+- poly1305-donna (public domain or MIT) and the BLAKE2s reference code of RFC 7693
+- nanopb, Copyright (c) 2011 Petteri Aimonen, zlib licence
+- TweetNaCl, public domain
+- the HPACK Huffman code table as published in nghttp2,
+  Copyright (c) 2012, 2014, 2015, 2016 Tatsuhiro Tsujikawa and nghttp2 contributors, MIT
+- NetBird protocol definitions (subset), Copyright (c) 2022 NetBird GmbH & AUTHORS, BSD-3-Clause
+The licence texts are in THIRD_PARTY_NOTICES.md and in the vendor/ directories.
