@@ -10,8 +10,8 @@
 netbird-lite puts an ESP32 into a [NetBird](https://netbird.io) network as a regular peer. Other
 peers reach it under its NetBird IP, NetBird access policies decide who may talk to it, and it
 needs no port forwarding, no public IP and no VPN gateway in front of it. It is an ESP-IDF
-component written in C: 63 KB of flash for the whole client and about 65 KB of
-RAM while connected.
+component written in C: 54 KB of flash on ESP32 and 63 KB on ESP32-C6, and while connected
+about 65 KB of heap (both task stacks and two TLS connections included) plus 21 KB of static RAM.
 
 > netbird-lite is an independent project. It is not affiliated with or endorsed by NetBird GmbH.
 
