@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en"><meta charset="utf-8">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{width:1280px;height:640px;overflow:hidden;
+       font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+       background:#0B0E13;color:#E6EDF3;position:relative}
+  .grid{position:absolute;inset:0;
+    background-image:linear-gradient(rgba(157,205,90,.055) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(157,205,90,.055) 1px,transparent 1px);
+    background-size:44px 44px}
+  .glow{position:absolute;width:900px;height:900px;border-radius:50%;right:-320px;top:-380px;
+    background:radial-gradient(circle,rgba(157,205,90,.20) 0%,rgba(157,205,90,.06) 42%,transparent 68%)}
+  .glow2{position:absolute;width:640px;height:640px;border-radius:50%;left:-260px;bottom:-340px;
+    background:radial-gradient(circle,rgba(157,205,90,.11) 0%,transparent 66%)}
+  .wrap{position:relative;height:100%;padding:74px 82px;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;gap:20px}
+  .brand svg{width:52px;height:60px;display:block}
+  .bt{line-height:1}
+  .bt .n{font-size:25px;font-weight:800;letter-spacing:.03em}
+  .bt .n span{color:#9DCD5A}
+  .bt .s{font-size:11.5px;letter-spacing:.30em;color:#7d8896;margin-top:6px;font-weight:600}
+  .mid{flex:1;display:flex;flex-direction:column;justify-content:center;margin-top:-14px}
+  .eyebrow{display:inline-flex;align-items:center;gap:11px;font-size:14px;font-weight:700;
+    letter-spacing:.22em;color:#9DCD5A;margin-bottom:26px}
+  .eyebrow::before{content:'';width:34px;height:2px;background:#9DCD5A;border-radius:2px}
+  h1{font-size:76px;font-weight:800;letter-spacing:-.022em;line-height:1.05;white-space:nowrap}
+  h1 .lime{color:#9DCD5A}
+  .sub{margin-top:26px;font-size:25px;color:#9aa5b1;line-height:1.45;max-width:940px;font-weight:400;text-wrap:balance}
+  .sub b{color:#E6EDF3;font-weight:600}
+  .foot{display:flex;align-items:center;justify-content:space-between}
+  .facts{display:flex;align-items:center;gap:18px;font-size:19px;font-weight:600;color:#c7d6b4}
+  .facts i{display:block;width:6px;height:6px;border-radius:50%;background:#9DCD5A}
+  .dom{font-size:18px;color:#7d8896;font-weight:600;letter-spacing:.02em}
+  .dom b{color:#9DCD5A}
+</style>
+<div class="grid"></div><div class="glow"></div><div class="glow2"></div>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="110 270 190 310" xmlns="http://www.w3.org/2000/svg">
+      <path d="M209 285 L125 334 L125 510 L166 527 L166 415 L193 413 L195 537 L212 543 Z
+               M166 368 L193 367 L195 369 L195 395 L193 397 L167 397 Z" fill="#9DCD5A" fill-rule="evenodd"/>
+      <path d="M235 313 L233 562 L283 529 L284 355 Z" fill="#9DCD5A"/>
+    </svg>
+    <div class="bt"><div class="n">INSIGHT<span>-IT</span></div><div class="s">IT-SYSTEMHAUS BERLIN</div></div>
+  </div>
+  <div class="mid">
+    <div class="eyebrow">OPEN SOURCE · MIT LICENSE</div>
+    <h1>netbird<span class="lime">-lite</span></h1>
+    <div class="sub">A <b>NetBird</b> client for <b>ESP32</b> microcontrollers: the device joins your NetBird network as a regular peer. No port forwarding, no public IP.</div>
+  </div>
+  <div class="foot">
+    <div class="facts"><span>ESP-IDF component</span><i></i><span>54 KB flash</span><i></i><span>~65 KB heap</span></div>
+    <div class="dom">insight-it.de<b> · We run your AI</b></div>
+  </div>
+</div>
+</html>
