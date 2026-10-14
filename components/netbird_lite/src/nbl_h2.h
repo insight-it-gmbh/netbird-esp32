@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Minimal gRPC client over HTTP/2 + TLS (esp-tls). Implemented by nbl_h2_lite.c (own HTTP/2
 // stack, default) or nbl_h2.c (nghttp2, CONFIG_NBL_H2_NGHTTP2).
 // One connection, several streams (management and signal often share the same host).

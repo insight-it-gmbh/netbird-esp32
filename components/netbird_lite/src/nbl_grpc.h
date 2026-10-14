@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // gRPC message framing (1-byte flag + 4-byte big-endian length) as a pure state machine.
 // Messages are delivered via callback; the buffer belongs to the state machine and is
 // only valid for the duration of the callback.

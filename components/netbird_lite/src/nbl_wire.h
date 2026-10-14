@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Hand-written encoding of the two "EncryptedMessage" envelopes (management: wgPubKey=1 body=2 version=3,
 // signal: key=2 remoteKey=3 body=4). The envelope is trivial and the body is large, so nanopb would only add a detour.
 // The decoder reads untrusted input (signal messages are relayed from any peer): every length is

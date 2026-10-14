@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Transport: esp-tls <-> nbl_h2p, plus gRPC framing (nbl_grpc) and the public nbl_h2 API.
 // Built instead of nbl_h2.c when CONFIG_NBL_H2_LITE=y.
 #include "nbl_h2.h"

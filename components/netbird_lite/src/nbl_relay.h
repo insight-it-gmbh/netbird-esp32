@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // NetBird relay client (WebSocket transport, relay protocol version 1). Transport only:
 // auth, payload (raw WireGuard packets) and health check. No ICE, no QUIC.
 #pragma once

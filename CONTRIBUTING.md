@@ -27,6 +27,11 @@ Thanks for helping. A few rules keep this small client small and safe.
 - No new runtime dependencies without discussion. C11, 4-space indentation, English comments,
   ASCII only.
 
+## Licensing of contributions
+
+netbird-lite is licensed under Apache-2.0. Unless you say otherwise, a contribution you submit is
+licensed under the same terms (section 5 of the license).
+
 ## Reporting bugs
 
 Please include the ESP-IDF version, the chip, the NetBird server version, and the log of the

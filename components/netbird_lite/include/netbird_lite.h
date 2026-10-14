@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // netbird-lite: lightweight NetBird client for ESP32 (ESP-IDF >= 5.4)
 //
 //   Management (gRPC/HTTP2, NaCl box) -> login/sync -> peers, relay token, firewall rules
@@ -13,7 +13,7 @@
 // must be connected to the same relay instance; there is no second relay connection.
 //
 // Version: the device reports NetBird version 0.44.0 with the netbird-lite release as build
-// metadata ("0.44.0+netbird-lite.0.2.0"). Official peers therefore keep a permanent connection
+// metadata ("0.44.0+netbird-lite.0.3.0"). Official peers therefore keep a permanent connection
 // (no lazy connections, which need >= 0.45.0), and the management server sends firewall rules
 // without port ranges (>= 0.48.0): a policy port range other than a single port does not reach
 // the device, and its traffic stays blocked. See NBL_VERSION in src/nbl_ctrl.c.
@@ -24,7 +24,7 @@
 #pragma once
 
 /** Version of this component (also sent as user agent and in the reported NetBird version). */
-#define NETBIRD_LITE_VERSION "0.2.0"
+#define NETBIRD_LITE_VERSION "0.3.0"
 
 #include <stdbool.h>
 #include <stdint.h>

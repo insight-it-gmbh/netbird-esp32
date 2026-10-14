@@ -78,7 +78,8 @@ else
   fail "HTTP GET /" "got: ${R:0:120}"
 fi
 
-E=$(curl -s -m 15 --data 'e2e-echo-123' "http://$IP/echo")
+# text/plain: servers that parse form bodies (Arduino's WebServer) keep a plain body unchanged
+E=$(curl -s -m 15 -H 'Content-Type: text/plain' --data 'e2e-echo-123' "http://$IP/echo")
 if [ "$E" = "e2e-echo-123" ]; then
   pass "HTTP POST /echo (round trip)"
 else

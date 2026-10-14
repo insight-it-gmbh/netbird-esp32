@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Pure relay protocol functions (NetBird relay protocol v1): messages and the server URL.
 // No dependencies.
 #pragma once

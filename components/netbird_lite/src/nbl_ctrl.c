@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Control plane: management (login/sync), signal (offer/answer), peer table, wiring to relay and WireGuard.
 #include <arpa/inet.h>
 #include <stdlib.h>

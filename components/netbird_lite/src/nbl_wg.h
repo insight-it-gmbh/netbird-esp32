@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // WireGuard as an lwIP network interface (wireguard-lwip), using the NetBird relay instead of UDP
 // as transport.
 #pragma once

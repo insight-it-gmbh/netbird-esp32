@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Decoding of a decrypted management SyncResponse into what netbird-lite uses: signal and relay
 // configuration, our address, the remote peers and the inbound firewall rules. Pure C on top of
 // nanopb, so it is unit-tested and fuzzed on the host (tests/host/test_rules.c, fuzz_wire.c).

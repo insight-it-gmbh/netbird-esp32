@@ -1,8 +1,8 @@
-version: "0.2.0"
+version: "0.3.0"
 description: "Lightweight NetBird client for ESP32: management, signal, relay, WireGuard, inbound firewall"
 url: "https://github.com/insight-it-gmbh/netbird-esp32"
 repository: "https://github.com/insight-it-gmbh/netbird-esp32.git"
-license: MIT
+license: Apache-2.0
 tags:
   - netbird
   - wireguard

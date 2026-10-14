@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 #include "nbl_relay.h"
 #include "netbird_lite.h"
 #include "nbl_relaymsg.h"

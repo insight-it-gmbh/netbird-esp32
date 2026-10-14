@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Inbound firewall: rule matching, tracking of connections opened by the device and a fragment
 // verdict cache. No dependencies, so it can be unit-tested on the host. Not thread-safe: the
 // caller serialises all calls on one nbl_acl_state_t (netbird-lite: the lwIP TCP/IP thread).

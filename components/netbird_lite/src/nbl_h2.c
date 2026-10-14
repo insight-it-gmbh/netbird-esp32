@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 #include "nbl_h2.h"
 #include "netbird_lite.h"
 #include "nbl_grpc.h"

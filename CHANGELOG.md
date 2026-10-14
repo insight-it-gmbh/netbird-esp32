@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-14
+
+### Changed
+
+- License: Apache-2.0 with a NOTICE file (was MIT). Releases up to 0.2.0 stay MIT; the change
+  applies to 0.3.0 and later. See LICENSE and NOTICE.
+- Reported version `0.44.0+netbird-lite.0.3.0`.
+- `tools/e2e_test.sh` sends the echo request as `text/plain` so that servers which parse form
+  bodies (Arduino's WebServer) return it unchanged.
+- The README states memory use precisely (heap vs. static RAM) and flash per chip.
+
 ## [0.2.0] - 2026-10-14
 
 First public release. Developed by Insight-IT GmbH.
@@ -42,3 +53,5 @@ First public release. Developed by Insight-IT GmbH.
   key generation on boards without Wi-Fi/Bluetooth (`CONFIG_NBL_KEYGEN_ENTROPY_SOURCE`).
 
 [0.2.0]: https://github.com/insight-it-gmbh/netbird-esp32/releases/tag/v0.2.0
+
+[0.3.0]: https://github.com/insight-it-gmbh/netbird-esp32/releases/tag/v0.3.0

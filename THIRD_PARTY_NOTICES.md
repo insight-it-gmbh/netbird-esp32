@@ -1,6 +1,6 @@
 # Third-party notices
 
-netbird-lite itself is MIT-licensed (see `LICENSE`). It contains or is derived from the
+netbird-lite itself is licensed under Apache-2.0 (see `LICENSE` and `NOTICE`). It contains or is derived from the
 following third-party work. Each component keeps its own licence.
 
 | Component | Where | Licence | Upstream |

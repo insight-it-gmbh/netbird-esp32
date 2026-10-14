@@ -3,7 +3,7 @@
 **A NetBird client for ESP32 microcontrollers.**
 
 [![CI](https://github.com/insight-it-gmbh/netbird-esp32/actions/workflows/ci.yml/badge.svg)](https://github.com/insight-it-gmbh/netbird-esp32/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![ESP-IDF 5.x](https://img.shields.io/badge/ESP--IDF-5.x-E7352C.svg)](https://github.com/espressif/esp-idf)
 [![Made by Insight-IT GmbH](https://img.shields.io/badge/Made%20by-Insight--IT%20GmbH-9DCD5A.svg)](https://www.insight-it.de)
 
@@ -24,7 +24,7 @@ ESP32 has been a long-standing community request
 implements the part of the protocol a small device needs, and nothing else.
 
 We built it because we wanted small devices in our own NetBird network, and released it under
-the MIT license in case it is useful to you too.
+the Apache-2.0 license in case it is useful to you too.
 
 ## What it does
 
@@ -253,8 +253,7 @@ data from the network. See [CONTRIBUTING.md](CONTRIBUTING.md).
 </a>
 
 **[Insight-IT GmbH](https://www.insight-it.de)** is an IT service provider in Berlin, Germany.
-For over 25 years we have been running IT infrastructure for companies of any size, from small
-and mid-sized businesses to enterprises and public-sector clients.
+For over 20 years serving companies, public clients, and government organizations.
 
 Built and maintained by **[Dominic Ballenthin](https://github.com/subbie5000)**.
 
@@ -264,7 +263,9 @@ Built and maintained by **[Dominic Ballenthin](https://github.com/subbie5000)**.
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Third-party components and their licences are listed in
+Apache-2.0, see [LICENSE](LICENSE). If you distribute netbird-lite or a modified version of it, keep
+the [NOTICE](NOTICE) file with it, as section 4 of the license requires. Releases up to 0.2.0 were
+published under the MIT license. Third-party components and their licences are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 NetBird is developed by NetBird GmbH. WireGuard and the WireGuard logo are registered trademarks

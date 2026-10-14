@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Minimal HTTP/2 client core (RFC 9113) + HPACK (RFC 7541): pure, no sockets, host-testable.
 // Only what gRPC to NetBird needs: HEADERS/DATA/SETTINGS/PING/WINDOW_UPDATE/RST_STREAM/
 // GOAWAY/CONTINUATION; no server push, no priorities. HPACK: static table + Huffman,

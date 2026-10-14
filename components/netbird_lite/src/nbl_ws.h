@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 // Pure WebSocket framing functions (RFC 6455, client side). No dependencies, so they can be
 // tested directly on the host.
 #pragma once
