@@ -262,7 +262,7 @@ from Berlin, operated exclusively in Germany.
 Built and maintained by **[Dominic Ballenthin](https://github.com/subbie5000)**.
 
 [![Website](https://img.shields.io/badge/Website-insight--it.de-9DCD5A?style=flat-square&logo=firefoxbrowser&logoColor=white)](https://www.insight-it.de)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Insight--IT-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/insight-it-gmbh-06b979171/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Insight--IT-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/company/insight-it-gmbh/)
 [![GitHub](https://img.shields.io/badge/GitHub-insight--it--gmbh-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/insight-it-gmbh)
 
 ## License
