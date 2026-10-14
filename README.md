@@ -20,7 +20,7 @@ about 65 KB of heap (both task stacks and two TLS connections included) plus 21 
 The official NetBird client is written in Go. On Linux (x86-64, v0.80.0) its binary is 41 MB and
 the running daemon uses about 50 MB of RAM; an ESP32 has about 0.5 MB. Running NetBird on an
 ESP32 has been a long-standing community request
-([netbirdio/netbird#4317](https://github.com/netbirdio/netbird/issues/4317)). netbird-lite
+([netbirdio/netbird#7976](https://github.com/netbirdio/netbird/discussions/7976)). netbird-lite
 implements the part of the protocol a small device needs, and nothing else.
 
 We built it because we wanted small devices in our own NetBird network, and released it under
@@ -35,7 +35,7 @@ the Apache-2.0 license in case it is useful to you too.
 | HTTP/2 | own minimal client (`nbl_h2p`, HPACK + Huffman, ~15 KB); nghttp2 selectable | RFC 9113 / RFC 7541 subset needed for gRPC |
 | Relay | WebSocket (RFC 6455) over TLS, NetBird relay protocol | carries the WireGuard packets; authenticated with the HMAC token from management |
 | WireGuard | [wireguard-lwip](https://github.com/smartalock/wireguard-lwip), small patch | lwIP network interface with the NetBird IP; transport is the relay instead of UDP |
-| Firewall | inbound filter at the interface (`nbl_acl`) | enforces the access policies from the network map (peer IP, protocol, port / port range) |
+| Firewall | inbound filter at the interface (`nbl_acl`) | enforces the access policies from the network map (peer IP, protocol, port) |
 | Protobuf | nanopb with only the fields used | field numbers identical to upstream |
 
 Once connected, the device has a normal lwIP interface with its NetBird address. Sockets,
@@ -54,6 +54,9 @@ relay connection drops.
   ciphertext.
 - Only TLS relays (`rels://`), no QUIC relay. Remote peers must use the same relay server.
 - IPv4 only. No DNS, routes or exit nodes, SSH, Rosenpass, lazy connections, posture checks.
+- No port ranges in policies. The device reports NetBird version 0.44.0, and management only
+  sends port-range rules to clients from 0.48.0 on, so a policy with a port range (other than a
+  single port) does not reach the device and that traffic stays blocked.
 - Setup-key login only (no SSO / device flow).
 - Inbound filtering only; outbound traffic is not filtered.
 - At most `CONFIG_NBL_MAX_PEERS` remote peers (default 4); further peers in the network map are
@@ -253,7 +256,8 @@ data from the network. See [CONTRIBUTING.md](CONTRIBUTING.md).
 </a>
 
 **[Insight-IT GmbH](https://www.insight-it.de)** is an IT service provider in Berlin, Germany.
-For over 20 years serving companies, public clients, and government organizations.
+For over 20 years serving companies, public clients, and government organizations: since 2002,
+from Berlin, operated exclusively in Germany.
 
 Built and maintained by **[Dominic Ballenthin](https://github.com/subbie5000)**.
 
