@@ -1,0 +1,125 @@
+// Minimal subset of NetBird shared/management/proto/management.proto (v0.80.0).
+// Field numbers, types and field names match the original to keep the wire format compatible
+// (enum value names carry an RP_/RD_/RA_ prefix for C, PortRange is PortInfo.Range upstream).
+// Fields we do not need are left out on purpose: nanopb skips unknown fields when decoding.
+syntax = "proto3";
+
+package management;
+
+message Empty {}
+
+// EncryptedMessage is encoded by hand (src/nbl_wire.h): the envelope is trivial, the body large.
+
+message ServerKeyResponse {
+  string key = 1;
+  int32 version = 3;
+}
+
+message PeerSystemMeta {
+  string hostname = 1;
+  string goOS = 2;
+  string kernel = 3;
+  string core = 4;
+  string platform = 5;
+  string OS = 6;
+  string netbirdVersion = 7;
+  string uiVersion = 8;
+  string kernelVersion = 9;
+  string OSVersion = 10;
+}
+
+message LoginRequest {
+  string setupKey = 1;
+  PeerSystemMeta meta = 2;
+}
+
+message SyncRequest {
+  PeerSystemMeta meta = 1;
+}
+
+message HostConfig {
+  string uri = 1;
+  int32 protocol = 2;
+}
+
+message RelayConfig {
+  repeated string urls = 1;
+  string tokenPayload = 2;
+  string tokenSignature = 3;
+}
+
+message NetbirdConfig {
+  HostConfig signal = 3;
+  RelayConfig relay = 4;
+}
+
+message PeerConfig {
+  string address = 1;
+  int32 mtu = 7;
+}
+
+message RemotePeerConfig {
+  string wgPubKey = 1;
+  repeated string allowedIps = 2;
+}
+
+enum RuleProtocol {
+  RP_UNKNOWN = 0;
+  RP_ALL = 1;
+  RP_TCP = 2;
+  RP_UDP = 3;
+  RP_ICMP = 4;
+  RP_CUSTOM = 5;
+}
+
+enum RuleDirection {
+  RD_IN = 0;
+  RD_OUT = 1;
+}
+
+enum RuleAction {
+  RA_ACCEPT = 0;
+  RA_DROP = 1;
+}
+
+message PortRange {
+  uint32 start = 1;
+  uint32 end = 2;
+}
+
+message PortInfo {
+  oneof portSelection {
+    uint32 port = 1;
+    PortRange range = 2;
+  }
+}
+
+message FirewallRule {
+  string PeerIP = 1;
+  RuleDirection Direction = 2;
+  RuleAction Action = 3;
+  RuleProtocol Protocol = 4;
+  string Port = 5;
+  PortInfo PortInfo = 6;
+  uint32 customProtocol = 8;
+  repeated bytes sourcePrefixes = 9;
+}
+
+message NetworkMap {
+  uint64 Serial = 1;
+  PeerConfig peerConfig = 2;
+  repeated RemotePeerConfig remotePeers = 3;
+  bool remotePeersIsEmpty = 4;
+  repeated FirewallRule FirewallRules = 8;
+  bool firewallRulesIsEmpty = 9;
+}
+
+message SyncResponse {
+  NetbirdConfig netbirdConfig = 1;
+  NetworkMap NetworkMap = 5;
+}
+
+message LoginResponse {
+  NetbirdConfig netbirdConfig = 1;
+  PeerConfig peerConfig = 2;
+}

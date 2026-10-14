@@ -1,0 +1,202 @@
+netbird-lite changes to wireguard-lwip (https://github.com/smartalock/wireguard-lwip, BSD-3-Clause),
+relative to upstream commit c54f20d (src/ directory). All other vendored files are unmodified.
+To reproduce the vendored copy, run "patch -p1 < NBL-PATCH.diff" in a copy of upstream src/.
+
+  - listen_port == 0: no UDP socket; packets go to nbl_wg_transport_send() and come in through
+    wireguardif_network_rx() (transport = NetBird relay)
+  - decrypted packets are passed to netif->input instead of ip_input() so the inbound ACL runs first
+  - IPv4 helpers for IPv4-only fields so the code builds with dual-stack lwIP; IPv6 cookie branch disabled
+  - debug printf() calls removed
+  - WIREGUARD_MAX_PEERS / WIREGUARD_MAX_SRC_IPS can be overridden at build time
+  - the timer never takes the netif link down: lwIP routes around link-down netifs, so VPN
+    traffic would leave unencrypted via the default route while no peer has a session
+
+diff -u a/wireguardif.c b/wireguardif.c
+--- a/wireguardif.c
++++ b/wireguardif.c
+@@ -45,6 +45,9 @@
+ #include "wireguard.h"
+ #include "crypto.h"
+ 
++/* NBL: provided by netbird-lite (nbl_wg.c) */
++extern err_t nbl_wg_transport_send(u16_t peer_slot, struct pbuf *q);
++
+ #include <stdio.h> // TODO: Remove
+ 
+ #define WIREGUARDIF_TIMER_MSECS 400
+@@ -64,7 +67,7 @@
+ 		tmp = &device->peers[x];
+ 		if (tmp->valid) {
+ 			for (y=0; y < WIREGUARD_MAX_SRC_IPS; y++) {
+-				if ((tmp->allowed_source_ips[y].valid) && ip_addr_netcmp(ipaddr, &tmp->allowed_source_ips[y].ip, &tmp->allowed_source_ips[y].mask)) {
++				if ((tmp->allowed_source_ips[y].valid) && ip4_addr_netcmp(ipaddr, ip_2_ip4(&tmp->allowed_source_ips[y].ip), ip_2_ip4(&tmp->allowed_source_ips[y].mask))) {
+ 					result = tmp;
+ 					break;
+ 				}
+@@ -81,11 +84,18 @@
+ static err_t wireguardif_peer_output(struct netif *netif, struct pbuf *q, struct wireguard_peer *peer) {
+ 	struct wireguard_device *device = (struct wireguard_device *)netif->state;
+ 	// Send to last know port, not the connect port
+-	//TODO: Support DSCP and ECN - lwip requires this set on PCB globally, not per packet
++	// NBL: pluggable transport. Without a UDP socket (listen_port == 0) the packet goes to
++	// nbl_wg_transport_send(); "port" then carries the netbird-lite peer tag (NetBird relay).
++	if (!device->udp_pcb) {
++		return nbl_wg_transport_send(peer->port, q);
++	}
+ 	return udp_sendto(device->udp_pcb, q, &peer->ip, peer->port);
+ }
+ 
+-static err_t wireguardif_device_output(struct wireguard_device *device, struct pbuf *q, const ip4_addr_t *ipaddr, u16_t port) {
++static err_t wireguardif_device_output(struct wireguard_device *device, struct pbuf *q, const ip_addr_t *ipaddr, u16_t port) {
++	if (!device->udp_pcb) {
++		return nbl_wg_transport_send(port, q);
++	}
+ 	return udp_sendto(device->udp_pcb, q, ipaddr, port);
+ }
+ 
+@@ -314,7 +324,7 @@
+ 								ip_addr_copy_from_ip4(src_ip, iphdr->src);
+ 								for (x=0; x < WIREGUARD_MAX_SRC_IPS; x++) {
+ 									if (peer->allowed_source_ips[x].valid) {
+-										if (ip_addr_netcmp(&src_ip, &peer->allowed_source_ips[x].ip, &peer->allowed_source_ips[x].mask)) {
++										if (ip4_addr_netcmp(ip_2_ip4(&src_ip), ip_2_ip4(&peer->allowed_source_ips[x].ip), ip_2_ip4(&peer->allowed_source_ips[x].mask))) {
+ 											src_ok = true;
+ 											header_len = PP_NTOHS(IPH_LEN(iphdr));
+ 											break;
+@@ -335,7 +345,8 @@
+ 								// 5. If the plaintext packet has not been dropped, it is inserted into the receive queue of the wg0 interface.
+ 								if (src_ok) {
+ 									// Send packet to be process by LWIP
+-									ip_input(pbuf, device->netif);
++									/* NBL: pass through netif->input (ACL filter) instead of calling ip_input directly */
++									(void)device->netif->input(pbuf, device->netif); /* the input function always takes ownership of the pbuf */
+ 									// pbuf is owned by IP layer now
+ 									pbuf = NULL;
+ 								}
+@@ -421,11 +432,11 @@
+ 
+ #if LWIP_IPV4
+ 	if (IP_IS_V4(addr) && (buflen >= 4)) {
+-		U32TO8_BIG(buf + result, PP_NTOHL(ip4_addr_get_u32(addr)));
++		U32TO8_BIG(buf + result, PP_NTOHL(ip4_addr_get_u32(ip_2_ip4(addr))));
+ 		result += 4;
+ 	}
+ #endif
+-#if LWIP_IPV6
++#if 0 /* NBL: IPv4 only; this upstream IPv6 branch tests IP_IS_V4 and would overrun buf */
+ 	if (IP_IS_V4(addr) && (buflen >= 16)) {
+ 		U16TO8_BIG(buf + result + 0, IP6_ADDR_BLOCK1(addr));
+ 		U16TO8_BIG(buf + result + 2, IP6_ADDR_BLOCK2(addr));
+@@ -773,7 +784,6 @@
+ 	}
+ 
+ 	uint32_t t2 = wireguard_sys_now();
+-	printf("Adding peer took %ldms\r\n", (t2-t1));
+ 
+ 	if (peer_index) {
+ 		if (peer) {
+@@ -871,10 +881,12 @@
+ 		}
+ 	}
+ 
+-	if (!link_up) {
+-		// Clear the IF-UP flag on netif
+-		netif_set_link_down(device->netif);
+-	}
++	// NBL: never take the link down here. lwIP's ip4_route() skips netifs without link, so while no
++	// peer has a session (before the first handshake, after the keys expired) traffic for the VPN
++	// addresses would leave unencrypted through the default route. Without a session
++	// wireguardif_output_to_peer() drops the packet (ERR_CONN) and this timer keeps initiating
++	// handshakes for connected peers.
++	(void)link_up;
+ }
+ 
+ 
+@@ -903,15 +915,16 @@
+ 		if (wireguard_base64_decode(init_data->private_key, private_key, &private_key_len)
+ 				&& (private_key_len == WIREGUARD_PRIVATE_KEY_LEN)) {
+ 
+-			udp = udp_new();
++			// NBL: listen_port == 0 -> no UDP socket; transport runs through nbl_wg_transport_send()/wireguardif_network_rx()
++			udp = init_data->listen_port ? udp_new() : NULL;
+ 
+-			if (udp) {
+-				result = udp_bind(udp, IP_ADDR_ANY, init_data->listen_port); // Note this listens on all interfaces! Really just want the passed netif
++			if (udp || !init_data->listen_port) {
++				result = udp ? udp_bind(udp, IP_ADDR_ANY, init_data->listen_port) : ERR_OK;
+ 				if (result == ERR_OK) {
+ 					device = (struct wireguard_device *)mem_calloc(1, sizeof(struct wireguard_device));
+ 					if (device) {
+ 						device->netif = netif;
+-						if (init_data->bind_netif) {
++						if (udp && init_data->bind_netif) {
+ 							udp_bind_netif(udp, init_data->bind_netif);
+ 						}
+ 						device->udp_pcb = udp;
+@@ -919,7 +932,6 @@
+ 						uint32_t t1 = wireguard_sys_now();
+ 						if (wireguard_device_init(device, private_key)) {
+ 							uint32_t t2 = wireguard_sys_now();
+-							printf("Device init took %ldms\r\n", (t2-t1));
+ 
+ #if LWIP_CHECKSUM_CTRL_PER_NETIF
+ 							NETIF_SET_CHECKSUM_CTRL(netif, NETIF_CHECKSUM_ENABLE_ALL);
+@@ -935,7 +947,7 @@
+ 							// NETIF_FLAG_LINK_UP is automatically set/cleared when at least one peer is connected
+ 							netif->flags = 0;
+ 
+-							udp_recv(udp, wireguardif_network_rx, device);
++							if (udp) udp_recv(udp, wireguardif_network_rx, device);
+ 
+ 							// Start a periodic timer for this wireguard device
+ 							sys_timeout(WIREGUARDIF_TIMER_MSECS, wireguardif_tmr, device);
+@@ -944,15 +956,15 @@
+ 						} else {
+ 							mem_free(device);
+ 							device = NULL;
+-							udp_remove(udp);
++							if (udp) udp_remove(udp);
+ 							result = ERR_ARG;
+ 						}
+ 					} else {
+-						udp_remove(udp);
++						if (udp) udp_remove(udp);
+ 						result = ERR_MEM;
+ 					}
+ 				} else {
+-					udp_remove(udp);
++					if (udp) udp_remove(udp);
+ 				}
+ 
+ 			} else {
+@@ -972,11 +984,11 @@
+ 	memset(peer, 0, sizeof(struct wireguardif_peer));
+ 	// Caller must provide 'public_key'
+ 	peer->public_key = NULL;
+-	ip4_addr_set_any(&peer->endpoint_ip);
++	ip_addr_set_zero_ip4(&peer->endpoint_ip);
+ 	peer->endport_port = WIREGUARDIF_DEFAULT_PORT;
+ 	peer->keep_alive = WIREGUARDIF_KEEPALIVE_DEFAULT;
+-	ip4_addr_set_any(&peer->allowed_ip);
+-	ip4_addr_set_any(&peer->allowed_mask);
++	ip_addr_set_zero_ip4(&peer->allowed_ip);
++	ip_addr_set_zero_ip4(&peer->allowed_mask);
+ 	memset(peer->greatest_timestamp, 0, sizeof(peer->greatest_timestamp));
+ 	peer->preshared_key = NULL;
+ }
+diff -u a/wireguard-platform.h b/wireguard-platform.h
+--- a/wireguard-platform.h
++++ b/wireguard-platform.h
+@@ -38,8 +38,12 @@
+ #include <stdbool.h>
+ 
+ // Peers are allocated statically inside the device structure to avoid malloc
++#ifndef WIREGUARD_MAX_PEERS
+ #define WIREGUARD_MAX_PEERS 1
++#endif
++#ifndef WIREGUARD_MAX_SRC_IPS
+ #define WIREGUARD_MAX_SRC_IPS 2
++#endif
+ 
+ // Per device limit on accepting (valid) initiation requests - per peer
+ #define MAX_INITIATIONS_PER_SECOND	(2)

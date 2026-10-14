@@ -1,0 +1,38 @@
+# nanopb size limits.
+# Everything the server controls is decoded through callbacks (src/nbl_netmap.c): a static string or
+# array that exceeds its limit makes nanopb reject the WHOLE message, so one long relay URL, the
+# routed networks of a routing peer or an IPv6 source prefix would otherwise discard the entire
+# network map. The callbacks keep what netbird-lite uses and skip the rest. Static limits remain
+# only for fields we encode ourselves and for the server key, whose length is fixed (44 characters).
+management.ServerKeyResponse.key       max_size:48
+
+management.PeerSystemMeta.hostname        max_size:40
+management.PeerSystemMeta.goOS            max_size:16
+management.PeerSystemMeta.kernel          max_size:16
+management.PeerSystemMeta.core            max_size:16
+management.PeerSystemMeta.platform        max_size:24
+management.PeerSystemMeta.OS              max_size:24
+management.PeerSystemMeta.netbirdVersion  max_size:32
+management.PeerSystemMeta.uiVersion       max_size:8
+management.PeerSystemMeta.kernelVersion   max_size:24
+management.PeerSystemMeta.OSVersion       max_size:24
+
+management.LoginRequest.setupKey       max_size:64
+
+management.HostConfig.uri              type:FT_CALLBACK
+
+management.RelayConfig.urls            type:FT_CALLBACK
+management.RelayConfig.tokenPayload    type:FT_CALLBACK
+management.RelayConfig.tokenSignature  type:FT_CALLBACK
+
+management.PeerConfig.address          type:FT_CALLBACK
+
+management.RemotePeerConfig.wgPubKey    type:FT_CALLBACK
+management.RemotePeerConfig.allowedIps  type:FT_CALLBACK
+
+management.FirewallRule.PeerIP          type:FT_CALLBACK
+management.FirewallRule.Port            type:FT_CALLBACK
+management.FirewallRule.sourcePrefixes  type:FT_CALLBACK
+
+management.NetworkMap.remotePeers       type:FT_CALLBACK
+management.NetworkMap.FirewallRules     type:FT_CALLBACK

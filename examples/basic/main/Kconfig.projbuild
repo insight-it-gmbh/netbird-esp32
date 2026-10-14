@@ -1,0 +1,26 @@
+menu "NetBird example"
+    config EXAMPLE_NB_MGMT_URL
+        string "Management URL"
+        default "https://netbird.example.com"
+        help
+            URL of your NetBird management server, e.g. "https://netbird.example.com"
+            or "https://netbird.example.com:33073".
+    config EXAMPLE_NB_SETUP_KEY
+        string "Setup key (first registration only)"
+        default ""
+        help
+            Needed until the device is registered; may be empty afterwards.
+    config EXAMPLE_NB_HOSTNAME
+        string "Peer name"
+        default ""
+        help
+            Empty: "esp32-xxxxxx" built from the last 3 bytes of the MAC address.
+    config EXAMPLE_WIFI_PS_NONE
+        bool "Disable Wi-Fi power save"
+        depends on EXAMPLE_CONNECT_WIFI
+        default y
+        help
+            Wi-Fi modem sleep delays every received packet by up to one beacon interval.
+            Measured on an ESP32-C6 over a NetBird relay: ping 107 ms with power save,
+            48 ms without. Turn this off for battery-powered devices.
+endmenu

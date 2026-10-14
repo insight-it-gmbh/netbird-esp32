@@ -1,0 +1,96 @@
+menu "netbird-lite"
+
+    choice NBL_H2_IMPL
+        prompt "HTTP/2 implementation"
+        default NBL_H2_LITE
+        help
+            LITE is the built-in minimal client (small flash/RAM footprint). NGHTTP2 uses the
+            nghttp2 reference library (fallback).
+
+        config NBL_H2_LITE
+            bool "Built-in minimal client (default)"
+        config NBL_H2_NGHTTP2
+            bool "nghttp2 (reference)"
+            help
+                Needs the espressif/nghttp component in your project:
+                idf.py add-dependency "espressif/nghttp^1.65.0"
+    endchoice
+
+
+    config NBL_MAX_PEERS
+        int "Maximum number of remote peers"
+        default 4
+        range 1 8
+        help
+            Each peer costs about 1.1 KB of RAM (WireGuard state and peer table entry,
+            including the precomputed NaCl box key). Additional peers in the network map
+            are ignored and reported in the log.
+
+    config NBL_MAX_RULES
+        int "Maximum number of inbound firewall rules"
+        default 32
+        range 4 256
+
+    config NBL_ACL_ENFORCE
+        bool "Filter inbound traffic according to NetBird policies"
+        default y
+        help
+            Without the filter the ESP32 accepts ALL traffic from every peer in the
+            network map, regardless of the policy's port rules. Disable for debugging only.
+
+    config NBL_CT_ENTRIES
+        int "Connection tracking entries"
+        depends on NBL_ACL_ENFORCE
+        default 16
+        range 4 64
+        help
+            Connections opened by the device itself (TCP, UDP, ICMP echo) are tracked so that
+            their replies pass the inbound filter, like the official client's stateful
+            firewall. Each entry costs 16 bytes. When the table is full the least recently
+            used entry is replaced.
+
+    config NBL_MTU
+        int "MTU of the WireGuard interface"
+        default 1280
+        range 576 1420
+        help
+            NetBird clients use 1280. A valid MTU sent by the management server (577..1420)
+            takes precedence.
+
+    config NBL_SNTP
+        bool "Set the clock via SNTP if it is not set yet"
+        default y
+        help
+            TLS certificate checks and WireGuard handshake timestamps need a valid time.
+
+    config NBL_SNTP_SERVER
+        string "SNTP server"
+        depends on NBL_SNTP
+        default "pool.ntp.org"
+
+    config NBL_KEYGEN_ENTROPY_SOURCE
+        bool "Enable the SAR ADC entropy source while generating the device key"
+        default n
+        help
+            The WireGuard key is created once, on the first start, with esp_fill_random().
+            ESP-IDF only guarantees true random numbers while Wi-Fi or Bluetooth is running
+            or an entropy source is enabled. Enable this on boards that connect via Ethernet
+            only: key generation then runs between bootloader_random_enable() and
+            bootloader_random_disable(). Do not enable it if the application uses the ADC
+            or the RF subsystem while nbl_start() runs for the first time.
+
+    config NBL_CTRL_STACK
+        int "Control task stack size (bytes)"
+        default 10240
+        range 6144 32768
+        help
+            Measured peak use is about 6.3 KB (TLS handshake plus HTTP/2 buffers).
+
+    config NBL_RELAY_STACK
+        int "Relay task stack size (bytes)"
+        default 6144
+        range 4096 32768
+        help
+            Measured peak use is about 3.5 KB (TLS handshake to the relay).
+
+endmenu

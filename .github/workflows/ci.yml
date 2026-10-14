@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    name: Host tests (ASan/UBSan, libFuzzer)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang and libFuzzer
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang llvm libclang-rt-18-dev
+      - name: Unit tests, regression inputs, 60 s fuzzing per target
+        run: tests/host/run.sh 60
+
+  build:
+    name: Build example (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    container: espressif/idf:v5.4.1
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ESP32-C6, Wi-Fi
+            target: esp32c6
+            defaults: sdkconfig.defaults
+          - name: ESP32-S3, Wi-Fi
+            target: esp32s3
+            defaults: sdkconfig.defaults
+          - name: ESP32, QEMU Ethernet
+            target: esp32
+            defaults: sdkconfig.defaults;sdkconfig.defaults.qemu
+          - name: ESP32-C6, nghttp2 fallback
+            target: esp32c6
+            defaults: sdkconfig.defaults;sdkconfig.ci.nghttp2
+            add_dependency: espressif/nghttp^1.65.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        shell: bash
+        working-directory: examples/basic
+        run: |
+          . "$IDF_PATH/export.sh"
+          if [ -n "${{ matrix.add_dependency }}" ]; then idf.py add-dependency "${{ matrix.add_dependency }}"; fi
+          idf.py -B build -DSDKCONFIG=build/sdkconfig -DSDKCONFIG_DEFAULTS="${{ matrix.defaults }}" set-target ${{ matrix.target }}
+          idf.py -B build -DSDKCONFIG=build/sdkconfig build
+          idf.py -B build -DSDKCONFIG=build/sdkconfig size

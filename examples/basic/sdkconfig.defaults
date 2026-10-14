@@ -1,0 +1,48 @@
+# netbird-lite example defaults. Your own values (management URL, setup key, Wi-Fi) go into
+# sdkconfig.defaults.local, which is git-ignored and applied on top by tools/build.sh.
+
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+CONFIG_LWIP_SNTP_MAX_SERVERS=1
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_EXAMPLE_CONNECT_IPV6=n
+
+# WireGuard runs in the lwIP thread. Measured peak use 1.4 KB, so 4 KB leaves a wide margin.
+CONFIG_LWIP_TCPIP_TASK_STACK_SIZE=4096
+
+# Throughput through the relay is limited by the TCP window over the round trip. lwIP's default
+# window is 4 segments; 16 segments raised a 200 KB download from 55 to 150 kB/s (ESP32-C6).
+# The extra memory is only used while data is in flight.
+CONFIG_LWIP_TCP_SND_BUF_DEFAULT=23040
+CONFIG_LWIP_TCP_WND_DEFAULT=23040
+CONFIG_LWIP_TCP_RECVMBOX_SIZE=16
+
+# TLS record buffers are allocated only while a record is in use. This left 60 KB more free heap
+# on the ESP32-C6 at unchanged throughput (under QEMU emulation it is slower).
+CONFIG_MBEDTLS_DYNAMIC_BUFFER=y
+CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y
+# CONFIG_MBEDTLS_SSL_KEEP_PEER_CERTIFICATE is not set
+
+# Smaller TLS: client only, modern key exchange only, common root CAs only, no IPv6.
+# If your server's CA is not in the common bundle, switch to ..._DEFAULT_FULL.
+CONFIG_MBEDTLS_TLS_CLIENT_ONLY=y
+# CONFIG_MBEDTLS_TLS_SERVER is not set
+# CONFIG_MBEDTLS_TLS_SERVER_AND_CLIENT is not set
+# CONFIG_MBEDTLS_SSL_RENEGOTIATION is not set
+# CONFIG_MBEDTLS_KEY_EXCHANGE_RSA is not set
+# CONFIG_MBEDTLS_KEY_EXCHANGE_ECDH_RSA is not set
+# CONFIG_MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA is not set
+# CONFIG_MBEDTLS_CCM_C is not set
+# CONFIG_MBEDTLS_CMAC_C is not set
+# CONFIG_MBEDTLS_PKCS7_C is not set
+# CONFIG_MBEDTLS_PEM_WRITE_C is not set
+# CONFIG_MBEDTLS_X509_CRL_PARSE_C is not set
+# CONFIG_MBEDTLS_X509_CSR_PARSE_C is not set
+# CONFIG_MBEDTLS_SSL_PROTO_DTLS is not set
+# CONFIG_MBEDTLS_SSL_DTLS_SRTP is not set
+# CONFIG_MBEDTLS_SERVER_SSL_SESSION_TICKETS is not set
+# CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL is not set
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_CMN=y
+CONFIG_LWIP_IPV6=n

@@ -1,0 +1,7 @@
+# Body is encoded by us and decoded from remote peers. Its strings are callbacks, so a long value from
+# a remote peer (ICE credentials, a development version string, a long relay URL) never makes nanopb
+# reject the whole message: payload is skipped when decoding, netBirdVersion is only logged and
+# relayServerAddress is checked against our buffer (src/nbl_ctrl.c).
+signalexchange.Body.payload             type:FT_CALLBACK
+signalexchange.Body.netBirdVersion      type:FT_CALLBACK
+signalexchange.Body.relayServerAddress  type:FT_CALLBACK

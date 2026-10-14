@@ -1,0 +1,28 @@
+# build output
+build/
+build-*/
+managed_components/
+dependencies.lock
+.venv-tools/
+__pycache__/
+*.pyc
+*.log
+
+# generated configuration (only the defaults files are tracked)
+sdkconfig*
+!sdkconfig.defaults
+!sdkconfig.defaults.qemu
+!sdkconfig.ci.*
+
+# local credentials and device state - never commit
+*.local
+.secrets/
+flash_persist-*.bin
+flash_qemu.bin
+
+# libFuzzer artefacts
+crash-*
+leak-*
+timeout-*
+oom-*
+slow-unit-*

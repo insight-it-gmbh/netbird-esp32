@@ -1,0 +1,14 @@
+version: "0.2.0"
+description: "Lightweight NetBird client for ESP32: management, signal, relay, WireGuard, inbound firewall"
+url: "https://github.com/insight-it-gmbh/netbird-esp32"
+repository: "https://github.com/insight-it-gmbh/netbird-esp32.git"
+license: MIT
+tags:
+  - netbird
+  - wireguard
+  - vpn
+  - overlay
+dependencies:
+  idf: ">=5.4"
+  # The optional nghttp2 HTTP/2 backend (CONFIG_NBL_H2_NGHTTP2) is not listed here on purpose:
+  # projects that select it add "espressif/nghttp" themselves (see Kconfig help).

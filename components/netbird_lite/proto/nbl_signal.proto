@@ -1,0 +1,22 @@
+// Minimal subset of NetBird shared/signal/proto/signalexchange.proto (v0.80.0).
+syntax = "proto3";
+
+package signalexchange;
+
+// EncryptedMessage is encoded by hand (src/nbl_wire.h): the envelope is trivial, the body large.
+
+message Body {
+  enum Type {
+    OFFER = 0;
+    ANSWER = 1;
+    CANDIDATE = 2;
+    MODE = 4;
+    GO_IDLE = 5;
+    HEARTBEAT = 6;
+  }
+  Type type = 1;
+  string payload = 2;
+  uint32 wgListenPort = 3;
+  string netBirdVersion = 4;
+  optional string relayServerAddress = 8;
+}

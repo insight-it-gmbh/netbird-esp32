@@ -1,0 +1,2 @@
+# CI only: build the example with the nghttp2-based HTTP/2 implementation instead of the built-in one.
+CONFIG_NBL_H2_NGHTTP2=y
