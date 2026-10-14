@@ -5,6 +5,7 @@
 [![CI](https://github.com/insight-it-gmbh/netbird-esp32/actions/workflows/ci.yml/badge.svg)](https://github.com/insight-it-gmbh/netbird-esp32/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![ESP-IDF 5.x](https://img.shields.io/badge/ESP--IDF-5.x-E7352C.svg)](https://github.com/espressif/esp-idf)
+[![Component Registry](https://components.espressif.com/components/insight-it-gmbh/netbird_lite/badge.svg)](https://components.espressif.com/components/insight-it-gmbh/netbird_lite)
 [![Made by Insight-IT GmbH](https://img.shields.io/badge/Made%20by-Insight--IT%20GmbH-9DCD5A.svg)](https://www.insight-it.de)
 
 netbird-lite puts an ESP32 into a [NetBird](https://netbird.io) network as a regular peer. Other
@@ -115,7 +116,14 @@ $ curl http://<device-netbird-ip>/status
 
 ## Using the component
 
-Add it to your project with the ESP-IDF component manager (`main/idf_component.yml`):
+The component is published in the
+[ESP Component Registry](https://components.espressif.com/components/insight-it-gmbh/netbird_lite):
+
+```bash
+idf.py add-dependency "insight-it-gmbh/netbird_lite^0.3.0"
+```
+
+Or add it as a git dependency (`main/idf_component.yml`):
 
 ```yaml
 dependencies:
