@@ -125,10 +125,12 @@ static struct {
     uint64_t serial;     /* Serial of the last applied network map (this session) */
     char mgmt_host[HOST_CAP];
     int mgmt_port;
+    bool mgmt_tls;           /* false: http:// (h2c), only with CONFIG_NBL_ALLOW_PLAINTEXT */
 
     sig_state_t sig_state;
     char sig_host[HOST_CAP]; /* wanted signal server, "" = none yet */
     int sig_port;
+    bool sig_tls;
     nbl_h2_t *sig;           /* == mgmt when signal runs on the management server */
     bool sig_registered, sig_closed;
     int64_t sig_next_us, sig_deadline_us, sig_up_us;
@@ -137,6 +139,7 @@ static struct {
     bool sig_inflight;
     char sig_open_host[HOST_CAP];
     int sig_open_port;
+    bool sig_open_tls;
 
     peer_t peers[MAX_PEERS];
     uint32_t my_ip;
@@ -200,16 +203,23 @@ static peer_t *peer_by_key(const char *k)
     return NULL;
 }
 
-/* "https://host[:port][/...]" or "host[:port]" (the form HostConfig.uri uses) */
-static int parse_url(const char *url, char *host, size_t hcap, int *port)
+/* "https://host[:port][/...]", "http://host[:port][/...]" or "host[:port]" (the form
+ * HostConfig.uri uses). *tls: in = what the scheme-less form means, out = what the URL says.
+ * The port defaults to 443 with TLS, 80 without. Whether plaintext is allowed is up to the
+ * caller (plaintext_ok()). */
+static int parse_url(const char *url, char *host, size_t hcap, int *port, bool *tls)
 {
     const char *p = url;
-    *port = 443;
     if (!strncmp(p, "https://", 8)) {
         p += 8;
+        *tls = true;
+    } else if (!strncmp(p, "http://", 7)) {
+        p += 7;
+        *tls = false; /* cleartext HTTP/2 (h2c) */
     } else if (strstr(p, "://")) {
-        return -1; /* h2c (cleartext HTTP/2) and other schemes are not supported */
+        return -1;
     }
+    *port = *tls ? 443 : 80;
     const char *colon = strchr(p, ':');
     size_t hl = colon ? (size_t)(colon - p) : strcspn(p, "/");
     if (hl == 0 || hl >= hcap) {
@@ -226,6 +236,15 @@ static int parse_url(const char *url, char *host, size_t hcap, int *port)
         *port = (int)v;
     }
     return 0;
+}
+
+static bool plaintext_ok(void)
+{
+#if CONFIG_NBL_ALLOW_PLAINTEXT
+    return true;
+#else
+    return false;
+#endif
 }
 
 /* ============================== Management ============================== */
@@ -607,6 +626,7 @@ static void sig_open_stream(int64_t now)
 struct sig_open_req {
     char host[HOST_CAP];
     int port;
+    bool tls;
 };
 
 /* The TLS handshake takes seconds. The management server pings after 5 s without traffic and
@@ -616,7 +636,7 @@ struct sig_open_req {
 static void sig_open_task(void *arg)
 {
     struct sig_open_req *r = arg;
-    nbl_h2_t *h = nbl_h2_open(r->host, r->port, 15000);
+    nbl_h2_t *h = nbl_h2_open(r->host, r->port, r->tls, 15000);
     free(r);
     xQueueSend(C.sig_q, &h, portMAX_DELAY);
     vTaskDelete(NULL);
@@ -627,7 +647,7 @@ static void sig_start(int64_t now)
     if (C.sig_inflight) {
         return; /* a previous open still runs: wait for its result */
     }
-    if (!strcmp(C.sig_host, C.mgmt_host) && C.sig_port == C.mgmt_port) {
+    if (!strcmp(C.sig_host, C.mgmt_host) && C.sig_port == C.mgmt_port && C.sig_tls == C.mgmt_tls) {
         C.sig = C.mgmt; /* same server: share the management connection */
         sig_open_stream(now);
         return;
@@ -639,8 +659,10 @@ static void sig_start(int64_t now)
     }
     strlcpy(r->host, C.sig_host, sizeof(r->host));
     r->port = C.sig_port;
+    r->tls = C.sig_tls;
     strlcpy(C.sig_open_host, C.sig_host, sizeof(C.sig_open_host));
     C.sig_open_port = C.sig_port;
+    C.sig_open_tls = C.sig_tls;
     if (xTaskCreate(sig_open_task, "nbl_sigopen", SIG_OPEN_STACK, r, 5, NULL) != pdPASS) {
         free(r);
         sig_fail("cannot start the connect task");
@@ -657,7 +679,8 @@ static bool sig_service(void)
     nbl_h2_t *h;
     if (C.sig_inflight && xQueueReceive(C.sig_q, &h, 0) == pdTRUE) {
         C.sig_inflight = false;
-        if (C.sig_state != SIG_OPENING || strcmp(C.sig_open_host, C.sig_host) != 0 || C.sig_open_port != C.sig_port) {
+        if (C.sig_state != SIG_OPENING || strcmp(C.sig_open_host, C.sig_host) != 0 || C.sig_open_port != C.sig_port ||
+            C.sig_open_tls != C.sig_tls) {
             nbl_h2_free(h); /* no longer wanted */
         } else if (!h) {
             set_err("Signal connection to %s failed", C.sig_open_host);
@@ -722,21 +745,27 @@ static void sig_want(const char *uri, int32_t proto)
 {
     char host[HOST_CAP];
     int port;
-    if (proto != 0 && proto != 3 /* HTTPS */) {
-        set_err("Unsupported signal protocol for %s (HTTPS only)", uri);
+    bool tls = proto != 2; /* scheme-less URI: 0 (unset) and 3 HTTPS mean TLS, 2 HTTP plain */
+    if (proto != 0 && proto != 2 && proto != 3) {
+        set_err("Unsupported signal protocol for %s (HTTP/HTTPS only)", uri);
         return;
     }
-    if (parse_url(uri, host, sizeof(host), &port) < 0) {
+    if (parse_url(uri, host, sizeof(host), &port, &tls) < 0) {
         set_err("Cannot parse signal URI %s", uri);
         return;
     }
-    if (!strcmp(host, C.sig_host) && port == C.sig_port) {
+    if (!tls && !plaintext_ok()) {
+        set_err("Signal server %s is plain HTTP, enable CONFIG_NBL_ALLOW_PLAINTEXT to use it", uri);
         return;
     }
-    ESP_LOGI(TAG, "Signal server %s:%d", host, port);
+    if (!strcmp(host, C.sig_host) && port == C.sig_port && tls == C.sig_tls) {
+        return;
+    }
+    ESP_LOGI(TAG, "Signal server %s:%d%s", host, port, tls ? "" : " (plain HTTP)");
     bool shared = C.sig && C.sig == C.mgmt;
     strlcpy(C.sig_host, host, sizeof(C.sig_host));
     C.sig_port = port;
+    C.sig_tls = tls;
     if (shared) {
         C.restart = true; /* the stream on the management connection cannot be cancelled */
         return;
@@ -1163,7 +1192,7 @@ static bool session(void)
     C.sig_state = SIG_IDLE;
     C.sig_backoff_s = SIG_RETRY_MIN_S;
     set_state(NBL_CONNECTING);
-    C.mgmt = nbl_h2_open(C.mgmt_host, C.mgmt_port, 15000);
+    C.mgmt = nbl_h2_open(C.mgmt_host, C.mgmt_port, C.mgmt_tls, 15000);
     if (!C.mgmt) {
         set_err("Connection to management %s failed", C.mgmt_host);
         return false;
@@ -1264,7 +1293,13 @@ esp_err_t nbl_start(const nbl_config_t *cfg)
         esp_read_mac(mac, ESP_MAC_WIFI_STA);
         snprintf(C.hostname, sizeof(C.hostname), "esp32-%02x%02x%02x", mac[3], mac[4], mac[5]);
     }
-    if (parse_url(C.mgmt_url, C.mgmt_host, sizeof(C.mgmt_host), &C.mgmt_port) < 0) {
+    C.mgmt_tls = true;
+    if (parse_url(C.mgmt_url, C.mgmt_host, sizeof(C.mgmt_host), &C.mgmt_port, &C.mgmt_tls) < 0) {
+        ESP_LOGE(TAG, "Cannot parse the management URL %s (https://host[:port] expected)", C.mgmt_url);
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!C.mgmt_tls && !plaintext_ok()) {
+        ESP_LOGE(TAG, "Management URL %s is plain HTTP, enable CONFIG_NBL_ALLOW_PLAINTEXT to use it", C.mgmt_url);
         return ESP_ERR_INVALID_ARG;
     }
     int created = 0;
@@ -1290,6 +1325,9 @@ esp_err_t nbl_start(const nbl_config_t *cfg)
     }
     ESP_LOGI(TAG, "Key %s (%s), management %s:%d, name %s, version %s", C.pub_b64, created ? "new" : "stored",
              C.mgmt_host, C.mgmt_port, C.hostname, NBL_VERSION);
+    if (!C.mgmt_tls) {
+        ESP_LOGW(TAG, "Management over plain HTTP (h2c): the server is not authenticated");
+    }
 
     C.sig_q = xQueueCreate(1, sizeof(nbl_h2_t *));
     if (!C.sig_q) {

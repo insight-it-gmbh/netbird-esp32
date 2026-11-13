@@ -61,7 +61,7 @@ typedef struct {
     char signal_uri[NBL_NM_URI_CAP];
     int32_t signal_protocol; /* HostConfig.Protocol: 0 UDP (unset), 1 TCP, 2 HTTP, 3 HTTPS, 4 DTLS */
     bool has_relay;         /* relay_url and the token are set */
-    char relay_url[NBL_NM_RELAY_URL_CAP]; /* the first rels:// URL, otherwise the first URL */
+    char relay_url[NBL_NM_RELAY_URL_CAP]; /* the first rels:// URL, otherwise the first URL (e.g. rel://) */
     char relay_payload[NBL_NM_TOKEN_PAYLOAD_CAP];
     char relay_sig[NBL_NM_TOKEN_SIG_CAP];
     int relay_urls;         /* relay URLs in the message */

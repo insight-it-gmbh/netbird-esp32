@@ -2,6 +2,7 @@
 // Pure relay protocol functions (NetBird relay protocol v1): messages and the server URL.
 // No dependencies.
 #pragma once
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -46,12 +47,14 @@ int nbl_relay_build_auth(uint8_t *out, size_t cap, const uint8_t peer_id[NBL_REL
 int nbl_relay_build_transport(uint8_t *out, size_t cap, const uint8_t dst_id[NBL_RELAY_ID_LEN],
                               const uint8_t *wg, size_t wg_len);
 
-/* Parses a relay server URL "rels://host[:port][/path]" (the path is ignored: the WebSocket
- * path is always /relay). The port defaults to 443 and must be 1..65535; the host may only
- * contain letters, digits, '-', '.' and '_'. Returns 0, or -1 for other schemes (rel://, plain
- * WebSocket, is not implemented), IPv6 literals ("[...]", not supported), user info, a host
- * that does not fit host_cap and any other malformed input. */
-int nbl_relay_parse_url(const char *url, char *host, size_t host_cap, uint16_t *port);
+/* Parses a relay server URL "rels://host[:port][/path]" (WebSocket over TLS) or
+ * "rel://host[:port][/path]" (plain WebSocket); the path is ignored: the WebSocket path is
+ * always /relay. *tls tells which scheme it was. The port defaults to 443 (rels) or 80 (rel)
+ * and must be 1..65535; the host may only contain letters, digits, '-', '.' and '_'. Returns
+ * 0, or -1 for other schemes, IPv6 literals ("[...]", not supported), user info, a host that
+ * does not fit host_cap and any other malformed input. Whether plain WebSocket is acceptable
+ * is the caller's decision. */
+int nbl_relay_parse_url(const char *url, char *host, size_t host_cap, uint16_t *port, bool *tls);
 
 #ifdef __cplusplus
 }

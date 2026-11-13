@@ -119,10 +119,12 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     memcpy(url, data, ul);
     url[ul] = 0;
     uint16_t port = 0;
-    if (nbl_relay_parse_url(url, host, sizeof(host), &port) == 0) {
+    bool tls = false;
+    if (nbl_relay_parse_url(url, host, sizeof(host), &port, &tls) == 0) {
         size_t hl = strlen(host);
-        CHECK(hl > 0 && hl < sizeof(host) && port >= 1 && !strncmp(url, "rels://", 7) &&
-              !strncmp(url + 7, host, hl));
+        size_t sl = tls ? 7 : 6;
+        CHECK(hl > 0 && hl < sizeof(host) && port >= 1 && !strncmp(url, tls ? "rels://" : "rel://", sl) &&
+              !strncmp(url + sl, host, hl));
         for (size_t i = 0; i < hl; i++) {
             char c = host[i];
             CHECK((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' ||

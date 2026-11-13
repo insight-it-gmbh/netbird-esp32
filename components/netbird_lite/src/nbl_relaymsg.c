@@ -77,12 +77,19 @@ static int is_host_char(char c)
            c == '.' || c == '_';
 }
 
-int nbl_relay_parse_url(const char *url, char *host, size_t host_cap, uint16_t *port)
+int nbl_relay_parse_url(const char *url, char *host, size_t host_cap, uint16_t *port, bool *tls)
 {
-    if (strncmp(url, "rels://", 7) != 0) {
+    const char *h;
+    bool secure;
+    if (!strncmp(url, "rels://", 7)) {
+        h = url + 7;
+        secure = true;
+    } else if (!strncmp(url, "rel://", 6)) {
+        h = url + 6;
+        secure = false;
+    } else {
         return -1;
     }
-    const char *h = url + 7;
     size_t hl = 0;
     while (is_host_char(h[hl])) {
         hl++;
@@ -91,7 +98,7 @@ int nbl_relay_parse_url(const char *url, char *host, size_t host_cap, uint16_t *
         return -1;
     }
     const char *p = h + hl;
-    unsigned long pt = 443;
+    unsigned long pt = secure ? 443 : 80;
     if (*p == ':') {
         size_t nd = 0;
         pt = 0;
@@ -108,5 +115,6 @@ int nbl_relay_parse_url(const char *url, char *host, size_t host_cap, uint16_t *
     memcpy(host, h, hl);
     host[hl] = 0;
     *port = (uint16_t)pt;
+    *tls = secure;
     return 0;
 }

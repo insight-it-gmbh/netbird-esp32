@@ -398,16 +398,23 @@ static void test_relaymsg(void)
     CHECK(nbl_relay_parse(NULL, 0, &m) < 0);
 }
 
-static int url(const char *u, const char *want_host, int want_port)
+/* want_tls: 1 = rels://, 0 = rel:// */
+static int url_tls(const char *u, const char *want_host, int want_port, int want_tls)
 {
     char host[16];
     uint16_t port = 0;
+    bool tls = !want_tls;
     memset(host, '#', sizeof(host));
-    int r = nbl_relay_parse_url(u, host, sizeof(host), &port);
+    int r = nbl_relay_parse_url(u, host, sizeof(host), &port, &tls);
     if (want_host == NULL) {
         return r < 0;
     }
-    return r == 0 && strcmp(host, want_host) == 0 && port == want_port;
+    return r == 0 && strcmp(host, want_host) == 0 && port == want_port && tls == (want_tls != 0);
+}
+
+static int url(const char *u, const char *want_host, int want_port)
+{
+    return url_tls(u, want_host, want_port, 1);
 }
 
 static void test_url(void)
@@ -428,9 +435,21 @@ static void test_url(void)
     CHECK(url("rels://h:44a", NULL, 0));
     CHECK(url("rels://h:-1", NULL, 0));
     CHECK(url("rels://h:443:1", NULL, 0));
-    /* schemes: rel:// (plain WebSocket) is not implemented */
-    CHECK(url("rel://h", NULL, 0));
+    /* rel:// (plain WebSocket): default port 80, same host/port rules */
+    CHECK(url_tls("rel://h", "h", 80, 0));
+    CHECK(url_tls("rel://10.42.0.1:80/relay", "10.42.0.1", 80, 0));
+    CHECK(url_tls("rel://relay.example:8080", "relay.example", 8080, 0));
+    CHECK(url_tls("rel://h:0", NULL, 0, 0));
+    CHECK(url_tls("rel://", NULL, 0, 0));
+    CHECK(url_tls("rel://[2001:db8::1]", NULL, 0, 0));
+    CHECK(url_tls("rel://user@h", NULL, 0, 0));
+    CHECK(url_tls("rel://123456789012345", "123456789012345", 80, 0));
+    CHECK(url_tls("rel://1234567890123456", NULL, 0, 0));
+    /* other schemes */
     CHECK(url("https://h", NULL, 0));
+    CHECK(url("http://h", NULL, 0));
+    CHECK(url("REL://h", NULL, 0));
+    CHECK(url("rel:/h", NULL, 0));
     CHECK(url("RELS://h", NULL, 0));
     CHECK(url("rels:/h", NULL, 0));
     CHECK(url("", NULL, 0));

@@ -57,6 +57,20 @@ menu "netbird-lite"
             NetBird clients use 1280. A valid MTU sent by the management server (577..1420)
             takes precedence.
 
+    config NBL_ALLOW_PLAINTEXT
+        bool "Allow unencrypted server connections (http://, rel://)"
+        default n
+        help
+            Accepts an http:// management URL, a signal server announced with protocol HTTP
+            and rel:// relay URLs. These connections use cleartext HTTP/2 (h2c, prior
+            knowledge) and plain WebSocket instead of TLS. Meant for lab setups without
+            certificates, e.g. a self-hosted NetBird behind a reverse proxy on port 80.
+
+            Management and signal messages stay end-to-end encrypted with the device key and
+            peer traffic stays WireGuard-encrypted, but the server is not authenticated:
+            anyone on the path can impersonate it, see metadata and replay the relay token.
+            Do not enable on production devices.
+
     config NBL_SNTP
         bool "Set the clock via SNTP if it is not set yet"
         default y
