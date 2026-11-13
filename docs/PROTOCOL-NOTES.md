@@ -13,7 +13,7 @@ remote peer.
 TLS certificate validation and WireGuard handshake timestamps both need a valid wall
 clock, so the control task waits for SNTP before it connects.
 
-### 2. Management (gRPC over HTTP/2, `https://host:443`, ALPN `h2`)
+### 2. Management (gRPC over HTTP/2, `https://host:443`, ALPN `h2`; `http://` = h2c with `CONFIG_NBL_ALLOW_PLAINTEXT`)
 
 - `GetServerKey` returns the server's WireGuard public key (Base64).
 - `Login`: `LoginRequest{setupKey, meta}` is sealed in a NaCl box (sender: our WireGuard
@@ -53,7 +53,7 @@ clock, so the control task waits for SNTP before it connects.
 - Offers can arrive before our relay connection is up. Answer them later, as soon as the
   relay is connected.
 
-### 4. Relay (`rels://host:443` -> `wss://host:443/relay`, binary WebSocket messages)
+### 4. Relay (`rels://host:443` -> `wss://host:443/relay`, binary WebSocket messages; `rel://host:80` -> `ws://` with `CONFIG_NBL_ALLOW_PLAINTEXT`)
 
 - Auth: `[1][6][0x2112A442][peer ID, 36 bytes][token]`
   - `peer ID = "sha-" + SHA-256(the Base64 public key as text)`

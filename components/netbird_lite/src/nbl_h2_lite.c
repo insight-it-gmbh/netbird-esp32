@@ -51,6 +51,7 @@ struct nbl_h2 {
     nbl_h2p_stream_t slots[MAX_STREAMS];
     nbl_stream_t streams[MAX_STREAMS];
     bool dead;
+    bool secure; /* TLS; false = h2c */
     int64_t last_ping_us, last_rx_us;
     char authority[160];
     uint8_t txbuf[1024]; /* output -> TLS; not on the stack, flush_out() also runs in callbacks */
@@ -179,23 +180,27 @@ static bool alpn_is_h2(esp_tls_t *tls)
     return p && !strcmp(p, "h2");
 }
 
-nbl_h2_t *nbl_h2_open(const char *host, int port, int timeout_ms)
+nbl_h2_t *nbl_h2_open(const char *host, int port, bool tls, int timeout_ms)
 {
     nbl_h2_t *h = calloc(1, sizeof(*h));
     if (!h) {
         return NULL;
     }
+    h->secure = tls;
     static const char *alpn[] = {"h2", NULL};
+    /* is_plain_tcp: esp-tls runs plain send()/recv() on the socket; get_bytes_avail() is
+     * then always 0, so the select() in nbl_h2_run() sees every pending byte. */
     esp_tls_cfg_t cfg = {
-        .alpn_protos = alpn,
-        .crt_bundle_attach = esp_crt_bundle_attach,
+        .alpn_protos = tls ? alpn : NULL,
+        .crt_bundle_attach = tls ? esp_crt_bundle_attach : NULL,
+        .is_plain_tcp = !tls,
         .timeout_ms = timeout_ms,
     };
     h->tls = esp_tls_init();
     bool ok = h->tls && esp_tls_conn_new_sync(host, strlen(host), port, &cfg, h->tls) == 1;
     if (!ok) {
-        ESP_LOGE(TAG, "TLS connection to %s:%d failed", host, port);
-    } else if (!alpn_is_h2(h->tls)) {
+        ESP_LOGE(TAG, "%s connection to %s:%d failed", tls ? "TLS" : "TCP", host, port);
+    } else if (tls && !alpn_is_h2(h->tls)) {
         ESP_LOGE(TAG, "%s:%d: server did not negotiate HTTP/2 (ALPN)", host, port);
         ok = false;
     }
@@ -266,7 +271,7 @@ nbl_stream_t *nbl_h2_call(nbl_h2_t *h, const char *path, const char *xn, const c
     nbl_h2p_hdr_t hdrs[8];
     size_t n = 0;
     hdrs[n++] = (nbl_h2p_hdr_t){":method", "POST"};
-    hdrs[n++] = (nbl_h2p_hdr_t){":scheme", "https"};
+    hdrs[n++] = (nbl_h2p_hdr_t){":scheme", h->secure ? "https" : "http"};
     hdrs[n++] = (nbl_h2p_hdr_t){":path", path};
     hdrs[n++] = (nbl_h2p_hdr_t){":authority", h->authority};
     hdrs[n++] = (nbl_h2p_hdr_t){"content-type", "application/grpc"};

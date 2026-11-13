@@ -93,8 +93,9 @@ bool nbl_pb_decode_str(pb_istream_t *s, const pb_field_t *f, void **arg)
     return true;
 }
 
-/* RelayConfig.urls: keep the first rels:// URL (the only scheme nbl_relay implements), otherwise
- * the first URL. Only one relay connection exists: remote peers must use the same relay. */
+/* RelayConfig.urls: keep the first rels:// URL (TLS preferred; rel:// needs
+ * CONFIG_NBL_ALLOW_PLAINTEXT), otherwise the first URL. Only one relay connection exists:
+ * remote peers must use the same relay. */
 static bool cb_relay_url(pb_istream_t *s, const pb_field_t *f, void **arg)
 {
     nbl_netmap_t *nm = *arg;

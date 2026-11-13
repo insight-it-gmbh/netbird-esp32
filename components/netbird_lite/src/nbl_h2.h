@@ -26,8 +26,9 @@ typedef struct {
     void (*on_close)(void *ctx, int grpc_status, const char *grpc_message, uint32_t h2_error);
 } nbl_stream_cb_t;
 
-/** TLS connect (ALPN "h2" required) + HTTP/2 connection setup. NULL on error. */
-nbl_h2_t *nbl_h2_open(const char *host, int port, int timeout_ms);
+/** Connect + HTTP/2 connection setup. NULL on error. tls = true: TLS with ALPN "h2" required;
+ *  false: cleartext HTTP/2 with prior knowledge (h2c, RFC 9113 section 3.3), :scheme "http". */
+nbl_h2_t *nbl_h2_open(const char *host, int port, bool tls, int timeout_ms);
 void nbl_h2_free(nbl_h2_t *h);
 bool nbl_h2_alive(const nbl_h2_t *h);
 

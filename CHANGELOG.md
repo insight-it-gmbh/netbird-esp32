@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `CONFIG_NBL_ALLOW_PLAINTEXT` (default off): connects to servers without TLS, for lab setups.
+  Accepts an `http://` management URL (cleartext HTTP/2, h2c with prior knowledge), a signal
+  server announced with protocol HTTP and `rel://` relay URLs (plain WebSocket). Both HTTP/2
+  implementations support it.
+- `nbl_start()` logs why a management URL is rejected.
+
 ## [0.3.0] - 2026-10-14
 
 ### Changed

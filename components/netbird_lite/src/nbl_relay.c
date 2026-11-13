@@ -262,14 +262,19 @@ static int relay_session(int64_t *up_us)
 
     char host[HOST_CAP];
     uint16_t port;
-    if (nbl_relay_parse_url(url, host, sizeof(host), &port) < 0) {
+    bool tls;
+    if (nbl_relay_parse_url(url, host, sizeof(host), &port, &tls) < 0) {
         goto out; /* not reached: nbl_relay_configure() only stores valid URLs */
     }
-    esp_tls_cfg_t cfg = {.crt_bundle_attach = esp_crt_bundle_attach, .timeout_ms = 10000};
+    /* is_plain_tcp: esp-tls runs plain send()/recv() on the socket (rel://, only stored with
+     * CONFIG_NBL_ALLOW_PLAINTEXT); the I/O below works unchanged for both. */
+    esp_tls_cfg_t cfg = {.crt_bundle_attach = tls ? esp_crt_bundle_attach : NULL,
+                         .is_plain_tcp = !tls,
+                         .timeout_ms = 10000};
     R.tls = esp_tls_init();
     if (!R.tls || esp_tls_conn_new_sync(host, strlen(host), port, &cfg, R.tls) != 1 ||
         esp_tls_get_conn_sockfd(R.tls, &R.fd) != ESP_OK) {
-        ESP_LOGW(TAG, "TLS connection to %s:%d failed", host, port);
+        ESP_LOGW(TAG, "%s connection to %s:%d failed", tls ? "TLS" : "TCP", host, port);
         goto out;
     }
     if (ws_handshake(host, port) < 0) {
@@ -495,13 +500,21 @@ void nbl_relay_configure(const char *url, const char *payload, const char *sig, 
 {
     char host[HOST_CAP];
     uint16_t port;
+    bool tls;
     if (strlen(url) >= sizeof(R.url) || strlen(payload) >= sizeof(R.tok_payload) ||
         strlen(sig) >= sizeof(R.tok_sig) || strlen(my_key) >= sizeof(R.my_key) ||
-        nbl_relay_parse_url(url, host, sizeof(host), &port) < 0) {
-        ESP_LOGE(TAG, "relay configuration ignored: unsupported URL (rels://host[:port] only) or a value "
-                      "too long: %.80s", url);
+        nbl_relay_parse_url(url, host, sizeof(host), &port, &tls) < 0) {
+        ESP_LOGE(TAG, "relay configuration ignored: unsupported URL (rels://host[:port] or rel://host[:port]) "
+                      "or a value too long: %.80s", url);
         return;
     }
+#if !CONFIG_NBL_ALLOW_PLAINTEXT
+    if (!tls) {
+        ESP_LOGE(TAG, "relay configuration ignored: %.80s is a plain WebSocket relay, enable "
+                      "CONFIG_NBL_ALLOW_PLAINTEXT to use it", url);
+        return;
+    }
+#endif
     if (!R.mu) {
         return;
     }

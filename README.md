@@ -53,7 +53,9 @@ relay connection drops.
 - **No direct (peer-to-peer) connections.** No ICE, STUN or TURN: all traffic goes through your
   NetBird relay, like the official client with *Force relay connection*. Relay only sees WireGuard
   ciphertext.
-- Only TLS relays (`rels://`), no QUIC relay. Remote peers must use the same relay server.
+- TLS relays (`rels://`) only by default, no QUIC relay. Remote peers must use the same relay server.
+- Servers without TLS (`http://` management, plain-HTTP signal, `rel://` relay) only with
+  `CONFIG_NBL_ALLOW_PLAINTEXT`, meant for lab setups: the server is then not authenticated.
 - IPv4 only. No DNS, routes or exit nodes, SSH, Rosenpass, lazy connections, posture checks.
 - No port ranges in policies. The device reports NetBird version 0.44.0, and management only
   sends port-range rules to clients from 0.48.0 on, so a policy with a port range (other than a
