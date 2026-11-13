@@ -8,6 +8,7 @@ Usage: tools/build.sh [MODE]
 
 Builds examples/basic with ESP-IDF. MODE is one of:
   qemu      ESP32 for QEMU with OpenCores Ethernet (default)
+  esp32     ESP32 (e.g. ESP-WROOM-32) with Wi-Fi
   esp32s3   ESP32-S3 with Wi-Fi
   esp32c6   ESP32-C6 with Wi-Fi
 
@@ -81,7 +82,7 @@ case "$MODE" in
       DEFAULTS="$DEFAULTS;sdkconfig.defaults.qemu.local"
     fi
     ;;
-  esp32s3 | esp32c6)
+  esp32 | esp32s3 | esp32c6)
     TARGET=$MODE
     DEFAULTS="sdkconfig.defaults"
     BUILD=build-$MODE
