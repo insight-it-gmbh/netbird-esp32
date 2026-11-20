@@ -86,8 +86,21 @@ see [Tuning](#tuning).
 
 ## Quick start
 
-Requirements: ESP-IDF 5.x (developed with 5.4.1), a NetBird management server (tested:
+Requirements: ESP-IDF 5.x (developed with 5.4.1) or 6.x, a NetBird management server (tested:
 self-hosted v0.80.0), a setup key, and a policy that lets your other peers reach the device.
+
+On **ESP-IDF 6.x** (mbedTLS 4.x, GCC 15) one extra option is needed. The WireGuard netif keeps its
+device struct in `netif->state`, and ESP-IDF's global netif callback casts `netif->state` to
+`esp_netif_t*` on link/status changes, which faults on a netif ESP-IDF did not create. IDF stores
+the esp-netif pointer in lwIP client data (safe for foreign netifs) only when bridge or PPP support
+is enabled, so set:
+
+```
+CONFIG_LWIP_PPP_SUPPORT=y
+```
+
+PPP itself is not used; the option only selects that storage. `CONFIG_ESP_NETIF_BRIDGE_EN=y` has the
+same effect.
 
 ```bash
 git clone https://github.com/insight-it-gmbh/netbird-esp32.git

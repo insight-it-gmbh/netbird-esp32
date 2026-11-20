@@ -8,7 +8,12 @@
 #include "esp_log.h"
 #include "esp_random.h"
 #include "mbedtls/base64.h"
+#include "mbedtls/build_info.h"   /* MBEDTLS_VERSION_MAJOR */
+#if MBEDTLS_VERSION_MAJOR >= 4
+#include "psa/crypto.h"           /* mbedTLS 4.x (ESP-IDF 6.x): mbedtls/sha256.h is gone */
+#else
 #include "mbedtls/sha256.h"
+#endif
 #include "nvs.h"
 #include "sdkconfig.h"
 #include "tweetnacl.h"
@@ -166,5 +171,11 @@ int nbl_box_open_inplace(uint8_t *box, size_t len, const uint8_t shared[32])
 void nbl_relay_id(const char *key_b64, uint8_t out[NBL_RELAY_ID_LEN])
 {
     memcpy(out, "sha-", 4);
+#if MBEDTLS_VERSION_MAJOR >= 4
+    size_t n = 0;
+    psa_hash_compute(PSA_ALG_SHA_256, (const uint8_t *)key_b64, strlen(key_b64),
+                     out + 4, NBL_RELAY_ID_LEN - 4, &n);
+#else
     mbedtls_sha256((const unsigned char *)key_b64, strlen(key_b64), out + 4, 0);
+#endif
 }

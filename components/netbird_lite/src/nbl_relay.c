@@ -18,7 +18,12 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
+#include "mbedtls/build_info.h"   /* MBEDTLS_VERSION_MAJOR */
+#if MBEDTLS_VERSION_MAJOR >= 4
+#include "psa/crypto.h"           /* mbedTLS 4.x (ESP-IDF 6.x): mbedtls/sha1.h is gone */
+#else
 #include "mbedtls/sha1.h"
+#endif
 #include "sdkconfig.h"
 #if CONFIG_VFS_SUPPORT_SELECT /* not available with CONFIG_LWIP_USE_ONLY_LWIP_SELECT */
 #include "esp_vfs_eventfd.h"
@@ -203,7 +208,12 @@ static int ws_handshake(const char *host, int port)
     char cat[80];
     snprintf(cat, sizeof(cat), "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", key);
     uint8_t sha[20];
+#if MBEDTLS_VERSION_MAJOR >= 4
+    size_t sha_len = 0;
+    psa_hash_compute(PSA_ALG_SHA_1, (const uint8_t *)cat, strlen(cat), sha, sizeof(sha), &sha_len);
+#else
     mbedtls_sha1((const unsigned char *)cat, strlen(cat), sha);
+#endif
     char accept[40];
     nbl_b64_enc(sha, sizeof(sha), accept, sizeof(accept));
 
