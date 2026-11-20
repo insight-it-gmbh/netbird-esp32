@@ -76,4 +76,4 @@ set_source_files_properties(
     "vendor/wireguard-lwip/crypto/refc/chacha20.c"
     "vendor/wireguard-lwip/crypto/refc/chacha20poly1305.c"
     "vendor/wireguard-lwip/crypto/refc/poly1305-donna.c"
-    PROPERTIES COMPILE_OPTIONS "-Wno-unused-function;-Wno-unused-variable;-Wno-format;-Wno-sign-compare;-Wno-stringop-overread;-Wno-error=array-parameter;-Wno-error=array-bounds")
+    PROPERTIES COMPILE_OPTIONS "-Wno-unused-function;-Wno-unused-variable;-Wno-format;-Wno-sign-compare;-Wno-stringop-overread;-Wno-error=array-parameter;-Wno-error=array-bounds;-Wno-unterminated-string-initialization")
